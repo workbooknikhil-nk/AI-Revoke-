@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Spinner from './Spinner';
 
@@ -8,6 +7,8 @@ interface ImageViewerProps {
   isLoading?: boolean;
   isEnhanced?: boolean;
   fileName?: string;
+  isAdjusting?: boolean;
+  isPreview?: boolean;
 }
 
 const DownloadIcon: React.FC<{className?: string}> = ({ className }) => (
@@ -23,7 +24,7 @@ const ImageIcon: React.FC<{className?: string}> = ({ className }) => (
 );
 
 
-const ImageViewer: React.FC<ImageViewerProps> = ({ title, imageUrl, isLoading = false, isEnhanced = false, fileName }) => {
+const ImageViewer: React.FC<ImageViewerProps> = ({ title, imageUrl, isLoading = false, isEnhanced = false, fileName, isAdjusting = false, isPreview = false }) => {
     
   const handleDownload = () => {
     if (!imageUrl || !fileName) return;
@@ -31,7 +32,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ title, imageUrl, isLoading = 
     link.href = imageUrl;
     
     const nameParts = fileName.split('.');
-    const extension = nameParts.pop(); // Not used, as model outputs PNG
+    nameParts.pop(); // Remove original extension
     const name = nameParts.join('.');
     
     link.download = `${name}-enhanced.png`;
@@ -47,18 +48,26 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ title, imageUrl, isLoading = 
         {isLoading && (
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center z-10">
                 <Spinner />
-                <p className="text-lg text-gray-300 mt-4">AI is working its magic...</p>
+                <p className="text-lg text-gray-300 mt-4">{isAdjusting ? 'Applying adjustments...' : 'AI is working its magic...'}</p>
             </div>
         )}
+        
+        {isPreview && imageUrl && !isLoading && (
+            <div className="absolute top-3 left-3 bg-black/60 text-white text-xs font-bold py-1 px-3 rounded-full z-10 tracking-wider">
+                PREVIEW
+            </div>
+        )}
+
         {!isLoading && !imageUrl && (
              <div className="text-gray-600 text-center">
                  <ImageIcon className="w-24 h-24 mx-auto"/>
                  <p className="mt-2">{isEnhanced ? 'Your enhanced photo will appear here' : 'Your photo will appear here'}</p>
              </div>
         )}
+        
         {imageUrl && <img src={imageUrl} alt={title} className="object-contain w-full h-full" />}
 
-        {isEnhanced && imageUrl && !isLoading && (
+        {isEnhanced && imageUrl && !isLoading && !isPreview && (
              <button 
                 onClick={handleDownload}
                 className="absolute bottom-4 right-4 bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-500 transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
