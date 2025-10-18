@@ -9,14 +9,39 @@ if (!API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-const PROMPT = `
-Enhance this photo to a professional, studio-level quality. Apply advanced lighting correction to create a dramatic yet natural feel. Improve contrast and sharpness to make details pop. 
-Perform subtle skin smoothing while meticulously preserving natural texture. Refine the background to remove distracting elements and add a slight, pleasing depth of field. 
-Apply sophisticated color grading for a polished, portfolio-ready look. The final image should be realistic and highly detailed, suitable for a magazine cover or a professional portrait portfolio.
-`;
+const getIntensityDescription = (intensity: number): string => {
+  if (intensity <= 25) {
+    return "Apply very subtle and minor adjustments. The changes should be barely noticeable, focusing only on the most essential corrections.";
+  }
+  if (intensity <= 50) {
+    return "Apply subtle enhancements. Focus on a natural look, gently improving lighting and clarity without drastic changes.";
+  }
+  if (intensity <= 75) {
+    return "Apply moderate and noticeable enhancements. The goal is a clearly improved but still realistic photo.";
+  }
+  return "Apply strong and dramatic, portfolio-ready enhancements. Be bold with lighting, color, and contrast to create a stunning, professional image.";
+}
 
-export const enhancePhoto = async (base64ImageData: string, mimeType: string): Promise<string> => {
+const createPrompt = (intensity: number): string => {
+    const intensityDescription = getIntensityDescription(intensity);
+    return `
+Enhance this photo to a professional, studio-level quality. 
+Intensity instruction: ${intensityDescription}
+
+Apply the following techniques based on the intensity instruction:
+- Advanced lighting correction to create a dramatic yet natural feel.
+- Improve contrast and sharpness to make details pop.
+- Perform subtle skin smoothing while meticulously preserving natural texture.
+- Refine the background to remove distracting elements and add a slight, pleasing depth of field.
+- Apply sophisticated color grading for a polished look.
+
+The final image should be realistic and highly detailed, suitable for a magazine cover or a professional portrait portfolio, with the specified intensity.
+`;
+}
+
+export const enhancePhoto = async (base64ImageData: string, mimeType: string, intensity: number): Promise<string> => {
   try {
+    const prompt = createPrompt(intensity);
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -28,7 +53,7 @@ export const enhancePhoto = async (base64ImageData: string, mimeType: string): P
             },
           },
           {
-            text: PROMPT,
+            text: prompt,
           },
         ],
       },

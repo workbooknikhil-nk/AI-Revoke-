@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import Header from './components/Header';
 import ImageUploader from './components/ImageUploader';
 import ImageViewer from './components/ImageViewer';
+import IntensitySlider from './components/IntensitySlider';
 import { enhancePhoto } from './services/geminiService';
 import type { ImageFile } from './types';
 
@@ -11,6 +12,7 @@ const App: React.FC = () => {
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [intensity, setIntensity] = useState<number>(100);
 
   const handleImageUpload = (file: File) => {
     const reader = new FileReader();
@@ -22,6 +24,7 @@ const App: React.FC = () => {
       });
       setEnhancedImage(null);
       setError(null);
+      setIntensity(100);
     };
     reader.onerror = () => {
       setError('Failed to read the image file.');
@@ -42,7 +45,7 @@ const App: React.FC = () => {
     try {
       // The base64 string from FileReader includes the data URL prefix, which needs to be removed.
       const base64Data = originalImage.base64.split(',')[1];
-      const resultBase64 = await enhancePhoto(base64Data, originalImage.type);
+      const resultBase64 = await enhancePhoto(base64Data, originalImage.type, intensity);
       
       // The Gemini API returns a raw base64 string, so we need to add the data URL prefix back.
       // The model typically returns PNGs after editing.
@@ -54,7 +57,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [originalImage]);
+  }, [originalImage, intensity]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
@@ -81,14 +84,22 @@ const App: React.FC = () => {
                 fileName={originalImage.name}
               />
             </div>
+            
+            <div className="flex flex-col items-center space-y-8 w-full">
+              <IntensitySlider 
+                value={intensity}
+                onChange={setIntensity}
+                disabled={isLoading}
+              />
+              <button
+                onClick={handleEnhance}
+                disabled={isLoading}
+                className="px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed disabled:text-gray-400 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50"
+              >
+                {isLoading ? 'Enhancing...' : 'Enhance Photo'}
+              </button>
+            </div>
 
-            <button
-              onClick={handleEnhance}
-              disabled={isLoading}
-              className="px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed disabled:text-gray-400 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50"
-            >
-              {isLoading ? 'Enhancing...' : 'Enhance Photo'}
-            </button>
           </div>
         )}
       </main>
