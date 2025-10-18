@@ -1,0 +1,5 @@
+{
+  "name": "ai photo editor ",
+  "description": "An AI-powered photo editor that enhances your images to studio-level quality. It applies advanced lighting correction, skin smoothing, background refinement, and color grading to create professional portraits ready for any portfolio.",
+  "requestFramePermissions": []
+}
